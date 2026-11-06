@@ -1,22 +1,26 @@
-// Source: docs/portfolio-content.md → Skills (honest presentation).
-// Used only by the resume PDF. The site shows skills next to each project,
-// with no proficiency bars, percentages, or years.
+// Source: docs/portfolio-content.md (v2.3) → Skills (honest presentation).
+// Not rendered: the site shows skills next to each project (stack tags), with
+// no proficiency bars, percentages, or years, and the resume only uses content
+// that also appears on the site.
 export const skills: { label: string; items: string }[] = [
   {
-    label: "Strongest",
-    items: "CI/CD, production deployment (Vercel, Azure DevOps)",
-  },
-  { label: "Languages", items: "TypeScript, JavaScript, Python, SQL, C++" },
-  {
-    label: "Web",
-    items: "Next.js, React, Django, Django REST Framework, Tailwind CSS",
-  },
-  { label: "Data", items: "PostgreSQL, Prisma, Supabase, Neon" },
-  {
-    label: "DevOps & infra",
+    label: "Deployment & infra",
     items:
-      "Vercel, Azure DevOps, GitHub Actions, Docker, Linux, SSH, Proxmox, LXC, Railway",
+      "Vercel, Railway, Azure Web Apps, Azure Blob Storage, Azure DevOps, Neon, Docker, GitHub Actions, Linux, SSH, Proxmox, LXC",
   },
-  { label: "Security", items: "JWT, RBAC, audit logging, VAPT (coursework)" },
-  { label: "ML", items: "XLM-RoBERTa, NLP, TF-IDF classical baselines" },
+  {
+    label: "Backend",
+    items:
+      "Django, Django REST Framework, Python, PostgreSQL, Prisma, Redis",
+  },
+  {
+    label: "Frontend",
+    items: "Next.js, React, TypeScript, JavaScript, Tailwind CSS, shadcn/ui",
+  },
+  {
+    label: "Security",
+    items: "JWT, RBAC, audit logging, rate limiting, NextAuth, VAPT (coursework)",
+  },
+  { label: "Tooling", items: "Git, GitHub, Jira, Sentry, Resend, Vitest" },
+  { label: "Other", items: "SQL, C++, NLP research (XLM-RoBERTa)" },
 ];

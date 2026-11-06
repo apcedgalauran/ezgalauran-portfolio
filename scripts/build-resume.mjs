@@ -1,5 +1,7 @@
 // Builds public/resume.pdf from the same /data files the website uses, so the
-// two can never disagree. Requires Node 22.18+ (native TypeScript stripping)
+// two can never disagree. It only uses content that is visible on the site
+// (card summaries and highlights, not the full expanded details), which keeps
+// it to a one-to-two-page summary. Requires Node 22.18+ (native TypeScript stripping)
 // and a local Chrome or Edge install.
 //
 //   npm run resume
@@ -20,7 +22,7 @@ const { projects } = await load("projects.ts");
 const { experience } = await load("experience.ts");
 const { leadership } = await load("leadership.ts");
 const { education } = await load("education.ts");
-const { skills } = await load("skills.ts");
+const { platforms } = await load("infrastructure.ts");
 
 const esc = (s) =>
   String(s)
@@ -35,35 +37,33 @@ const link = (href, text = bare(href)) =>
 const bullets = (items) =>
   items.length ? `<ul>${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : "";
 
-// Detail groups that only make sense on the website.
-const SKIP_GROUPS = new Set(["Privacy", "Why it matters", "Context"]);
+// Projects without card highlights (the thesis) show their results instead.
+const resumePoints = (p) =>
+  p.highlights?.length
+    ? p.highlights
+    : (p.details.find((g) => g.heading.startsWith("Results"))?.items ?? []);
 
-// NAMFREL appears under Experience on the resume, so skip its project card.
 const projectHtml = projects
-  .filter((p) => p.slug !== "namfrel-portal")
   .map((p) => {
-    const groups = p.details
-      .filter((g) => !SKIP_GROUPS.has(g.heading))
-      // Short items read fine inline (saves a page); long ones stay bulleted.
-      .map((g) =>
-        g.items.every((i) => i.length < 80)
-          ? `<p><span class="k">${esc(g.heading)}:</span> ${esc(g.items.join("; "))}</p>`
-          : g.items.length === 1
-            ? `<p><span class="k">${esc(g.heading)}:</span> ${esc(g.items[0])}</p>`
-            : `<p class="k">${esc(g.heading)}</p>${bullets(g.items)}`,
-      )
-      .join("");
+    const meta = [p.dates, p.status].filter(Boolean).map(esc).join(" · ");
     return `
     <div class="entry">
-      <div class="row"><h3>${esc(p.title)}</h3><span class="meta">${esc(p.status)}</span></div>
-      <p class="sub">${esc(p.role)}</p>
+      <div class="row"><h3>${esc(p.title)}</h3><span class="meta">${meta}</span></div>
+      <p class="sub">${esc(p.label)}${p.role ? ` · ${esc(p.role)}` : ""}</p>
       <p>${esc(p.summary)}</p>
-      ${groups}
-      ${p.credit ? `<p class="note">${esc(p.credit)}</p>` : ""}
+      ${bullets(resumePoints(p))}
+      ${p.note ? `<p class="note">${esc(p.note)}</p>` : ""}
       <p class="stack">${esc(p.stack.join(" · "))}</p>
     </div>`;
   })
   .join("");
+
+const platformHtml = `<table class="platforms">${platforms
+  .map(
+    (pl) =>
+      `<tr><td>${esc(pl.name)}</td><td>${esc(pl.what)} <span class="where">(${esc(pl.where.map((w) => (w === "this site" ? bare(profile.domain) : w)).join(", "))})</span></td></tr>`,
+  )
+  .join("")}</table>`;
 
 const experienceHtml = experience
   .map(
@@ -108,13 +108,15 @@ const html = `<!DOCTYPE html>
   table { border-collapse: collapse; width: 100%; }
   td { padding: 1.5pt 0; vertical-align: baseline; }
   td.d { text-align: right; font-family: Consolas, "SF Mono", monospace; font-size: 8.2pt; color: #555; white-space: nowrap; }
-  .skills td:first-child { width: 88pt; font-weight: 600; }
+  .platforms td:first-child { width: 78pt; font-family: Consolas, "SF Mono", monospace; font-size: 8.4pt; font-weight: 600; color: #0e0e0e; }
+  .platforms td { padding: 1.8pt 0; }
+  .where { color: #666; }
 </style></head>
 <body>
   <header>
     <h1>${esc(profile.name)}</h1>
     <p class="title">${esc(profile.title)}</p>
-    <p class="contact">${link(`mailto:${profile.email}`, profile.email)} · ${link(profile.linkedin)} · ${link(profile.github)} · ${link(profile.domain)}</p>
+    <p class="contact">${link(`mailto:${profile.email}`, profile.email)} · ${link(profile.linkedin)} · ${link(profile.github)}</p>
     <p class="tagline">${esc(profile.tagline)}</p>
   </header>
 
@@ -124,6 +126,12 @@ const html = `<!DOCTYPE html>
     <p class="sub">${esc(education.school)}, ${esc(education.location)}</p>
     ${education.honors.map((h) => `<p>${esc(h)}</p>`).join("")}
     <p><span class="k">Relevant coursework:</span> ${esc(education.coursework.join(", "))}</p>
+    ${education.certifications
+      .map(
+        (c) =>
+          `<p><span class="k">Certification:</span> ${esc(c.name)} — ${esc(c.issuer)}, ${esc(c.date)}</p>`,
+      )
+      .join("")}
   </div>
 
   <h2>Experience</h2>
@@ -131,6 +139,9 @@ const html = `<!DOCTYPE html>
 
   <h2>Projects</h2>
   ${projectHtml}
+
+  <h2>Deployment &amp; Infrastructure</h2>
+  ${platformHtml}
 
   <h2>Leadership</h2>
   <table>${leadership.roles
@@ -142,18 +153,6 @@ const html = `<!DOCTYPE html>
   <p class="k">Speaking &amp; hosting</p>
   ${bullets(leadership.speaking)}
 
-  <h2>Certification</h2>
-  ${education.certifications
-    .map(
-      (c) =>
-        `<div class="row"><span><strong>${esc(c.name)}</strong> — ${esc(c.issuer)}</span><span class="meta">${esc(c.date)}</span></div>`,
-    )
-    .join("")}
-
-  <h2>Skills</h2>
-  <table class="skills">${skills
-    .map((s) => `<tr><td>${esc(s.label)}</td><td>${esc(s.items)}</td></tr>`)
-    .join("")}</table>
 </body></html>`;
 
 const candidates = [

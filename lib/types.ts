@@ -11,8 +11,8 @@ export interface Profile {
   title: string;
   location: string;
   tagline: string;
-  about: string;
-  engineeringValue: string;
+  /** One string per paragraph. */
+  about: string[];
   email: string;
   domain: string;
   github: string;
@@ -35,20 +35,34 @@ export interface DetailGroup {
   heading: string;
   /** Rendered as a paragraph when there is one item, a list otherwise. */
   items: string[];
+  /** Optional labelled paragraph after the items (e.g. "Lesson learned"). */
+  note?: { label: string; text: string };
 }
 
 export interface Project {
   slug: string;
   label: string;
-  status: string;
+  /** Omitted while the content doc marks it [CONFIRM]. */
+  status?: string;
   title: string;
+  dates?: string;
   summary: string;
-  role: string;
+  role?: string;
+  /** Short visible note on the card (e.g. why there is no link). */
+  note?: string;
+  /** Shown on the card without expanding. */
+  highlights?: string[];
   stack: string[];
+  /** Heading of the expanded view, e.g. "What I did". */
+  detailsHeading?: string;
   details: DetailGroup[];
-  /** Credit for work done by teammates, shown so nothing is over-claimed. */
-  credit?: string;
   links?: Link[];
+}
+
+export interface Platform {
+  name: string;
+  what: string;
+  where: string[];
 }
 
 export interface Experience {

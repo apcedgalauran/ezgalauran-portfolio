@@ -1,24 +1,36 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState, type TransitionEvent } from "react";
 import type { DetailGroup, Project } from "@/lib/types";
 import { StatusBadge, Tag } from "@/components/ui/Tag";
 import { Bullets } from "@/components/ui/Bullets";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { ArrowUpRightIcon } from "@/components/ui/icons";
 
-function Group({ group }: { group: DetailGroup }) {
+function Group({
+  group,
+  as: Heading = "h4",
+}: {
+  group: DetailGroup;
+  as?: "h4" | "h5";
+}) {
   return (
     <div>
-      <h4 className="font-mono text-xs uppercase tracking-[0.12em] text-dim">
+      <Heading className="font-mono text-xs uppercase tracking-[0.12em] text-dim">
         {group.heading}
-      </h4>
+      </Heading>
       {group.items.length === 1 ? (
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-body">
           {group.items[0]}
         </p>
       ) : (
         <Bullets items={group.items} className="mt-2" />
+      )}
+      {group.note && (
+        <p className="mt-3 text-[0.9375rem] leading-relaxed text-body">
+          <span className="font-medium text-heading">{group.note.label}:</span>{" "}
+          {group.note.text}
+        </p>
       )}
     </div>
   );
@@ -27,6 +39,15 @@ function Group({ group }: { group: DetailGroup }) {
 export function ProjectCard({ project }: { project: Project }) {
   const [open, setOpen] = useState(false);
   const detailsId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  // Collapsing a long card pulls the toggle button up past the top of the
+  // viewport. Once the collapse finishes, bring it back into view so keyboard
+  // and screen-reader users don't lose their place.
+  const onCollapseEnd = (e: TransitionEvent<HTMLDivElement>) => {
+    if (open || e.target !== e.currentTarget) return;
+    toggleRef.current?.scrollIntoView({ block: "nearest" });
+  };
 
   return (
     <article className="flex flex-col rounded-lg border border-line bg-surface p-6 transition-colors duration-150 hover:border-line-strong sm:p-7">
@@ -34,15 +55,26 @@ export function ProjectCard({ project }: { project: Project }) {
         <p className="font-mono text-xs uppercase tracking-[0.12em] text-dim">
           {project.label}
         </p>
-        <StatusBadge>{project.status}</StatusBadge>
+        {project.status && <StatusBadge>{project.status}</StatusBadge>}
       </div>
 
       <h3 className="mt-4 text-lg font-semibold leading-snug tracking-tight text-heading sm:text-xl">
         {project.title}
       </h3>
+      {project.dates && (
+        <p className="mt-1.5 font-mono text-xs text-dim">{project.dates}</p>
+      )}
       <p className="mt-2 text-[0.9375rem] leading-relaxed text-body">
         {project.summary}
       </p>
+
+      {project.highlights && project.highlights.length > 0 && (
+        <Bullets items={project.highlights} tone="strong" className="mt-5" />
+      )}
+
+      {project.note && (
+        <p className="mt-5 text-sm leading-relaxed text-dim">{project.note}</p>
+      )}
 
       <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Tech stack">
         {project.stack.map((tech) => (
@@ -53,20 +85,31 @@ export function ProjectCard({ project }: { project: Project }) {
       </ul>
 
       <div
+        onTransitionEnd={onCollapseEnd}
         className={`grid transition-[grid-template-rows] duration-300 ease-out ${
           open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
         }`}
       >
         <div id={detailsId} inert={!open} className="overflow-hidden">
           <div className="mt-6 space-y-5 border-t border-line pt-6">
-            <Group group={{ heading: "Role", items: [project.role] }} />
-            {project.details.map((group) => (
-              <Group key={group.heading} group={group} />
-            ))}
-            {project.credit && (
-              <p className="text-sm leading-relaxed text-dim">
-                {project.credit}
-              </p>
+            {project.role && (
+              <Group group={{ heading: "Role", items: [project.role] }} />
+            )}
+            {project.detailsHeading ? (
+              <div>
+                <h4 className="text-base font-semibold tracking-tight text-heading">
+                  {project.detailsHeading}
+                </h4>
+                <div className="mt-5 space-y-6">
+                  {project.details.map((group) => (
+                    <Group key={group.heading} group={group} as="h5" />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              project.details.map((group) => (
+                <Group key={group.heading} group={group} />
+              ))
             )}
             {project.links && project.links.length > 0 && (
               <ul className="flex flex-wrap gap-4">
@@ -90,6 +133,7 @@ export function ProjectCard({ project }: { project: Project }) {
 
       <div className="mt-auto pt-6">
         <button
+          ref={toggleRef}
           type="button"
           aria-expanded={open}
           aria-controls={detailsId}
