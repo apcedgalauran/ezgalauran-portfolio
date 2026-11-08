@@ -31,6 +31,12 @@ export function Experience() {
               {job.points.length > 0 && (
                 <Bullets items={job.points} className="mt-4" />
               )}
+              {job.note && (
+                <p className="mt-4 text-sm leading-relaxed text-dim">
+                  <span className="font-medium text-body">Team context:</span>{" "}
+                  {job.note}
+                </p>
+              )}
               {job.links?.map((link) => (
                 <ExternalLink
                   key={link.href}

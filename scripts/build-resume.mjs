@@ -22,7 +22,6 @@ const { projects } = await load("projects.ts");
 const { experience } = await load("experience.ts");
 const { leadership } = await load("leadership.ts");
 const { education } = await load("education.ts");
-const { platforms } = await load("infrastructure.ts");
 
 const esc = (s) =>
   String(s)
@@ -37,13 +36,23 @@ const link = (href, text = bare(href)) =>
 const bullets = (items) =>
   items.length ? `<ul>${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : "";
 
-// Projects without card highlights (the thesis) show their results instead.
-const resumePoints = (p) =>
-  p.highlights?.length
-    ? p.highlights
-    : (p.details.find((g) => g.heading.startsWith("Results"))?.items ?? []);
+// Card highlights, plus the results for projects that report them (the thesis).
+const resumePoints = (p) => [
+  ...(p.highlights ?? []),
+  ...(p.details.find((g) => g.heading.startsWith("Results"))?.items ?? []),
+];
 
-const projectHtml = projects
+// A project already covered by an Experience entry (same link, e.g. the
+// NAMFREL portal) is shown on the site twice but only once on the resume,
+// under Experience. NAMFREL's wording comes from data/namfrel.ts.
+const experienceLinks = new Set(
+  experience.flatMap((e) => e.links?.map((l) => l.href) ?? []),
+);
+const resumeProjects = projects.filter(
+  (p) => !p.links?.some((l) => experienceLinks.has(l.href)),
+);
+
+const projectHtml = resumeProjects
   .map((p) => {
     const meta = [p.dates, p.status].filter(Boolean).map(esc).join(" · ");
     return `
@@ -53,17 +62,10 @@ const projectHtml = projects
       <p>${esc(p.summary)}</p>
       ${bullets(resumePoints(p))}
       ${p.note ? `<p class="note">${esc(p.note)}</p>` : ""}
-      <p class="stack">${esc(p.stack.join(" · "))}</p>
+      <p class="stack">${p.stackLabel ? `${esc(p.stackLabel)}: ` : ""}${esc(p.stack.join(" · "))}</p>
     </div>`;
   })
   .join("");
-
-const platformHtml = `<table class="platforms">${platforms
-  .map(
-    (pl) =>
-      `<tr><td>${esc(pl.name)}</td><td>${esc(pl.what)} <span class="where">(${esc(pl.where.map((w) => (w === "this site" ? bare(profile.domain) : w)).join(", "))})</span></td></tr>`,
-  )
-  .join("")}</table>`;
 
 const experienceHtml = experience
   .map(
@@ -73,6 +75,7 @@ const experienceHtml = experience
       <p class="sub">${esc(e.role)}</p>
       ${e.summary ? `<p>${esc(e.summary)}</p>` : ""}
       ${bullets(e.points)}
+      ${e.note ? `<p class="note"><span class="k">Team context:</span> ${esc(e.note)}</p>` : ""}
       ${e.links?.length ? `<p class="stack">${e.links.map((l) => link(l.href)).join(" · ")}</p>` : ""}
     </div>`,
   )
@@ -95,7 +98,10 @@ const html = `<!DOCTYPE html>
        text-transform: uppercase; letter-spacing: 1.2pt; color: #555;
        border-bottom: 0.6pt solid #bbb; padding-bottom: 3pt; margin: 15pt 0 7pt; }
   h3 { font-size: 10.2pt; margin: 0; color: #0e0e0e; font-weight: 600; }
-  .entry { margin: 0 0 9pt; break-inside: avoid; }
+  .entry { margin: 0 0 9pt; }
+  /* Entries may split across pages (no big blank gap); keep a heading with its first lines. */
+  .row, .sub, h2 { break-after: avoid; }
+  li, p { orphans: 2; widows: 2; }
   .row { display: flex; justify-content: space-between; gap: 12pt; align-items: baseline; }
   .meta { font-family: Consolas, "SF Mono", monospace; font-size: 8.2pt; color: #555; white-space: nowrap; }
   .sub { margin: 1pt 0 3pt; color: #444; font-style: italic; }
@@ -108,9 +114,6 @@ const html = `<!DOCTYPE html>
   table { border-collapse: collapse; width: 100%; }
   td { padding: 1.5pt 0; vertical-align: baseline; }
   td.d { text-align: right; font-family: Consolas, "SF Mono", monospace; font-size: 8.2pt; color: #555; white-space: nowrap; }
-  .platforms td:first-child { width: 78pt; font-family: Consolas, "SF Mono", monospace; font-size: 8.4pt; font-weight: 600; color: #0e0e0e; }
-  .platforms td { padding: 1.8pt 0; }
-  .where { color: #666; }
 </style></head>
 <body>
   <header>
@@ -139,9 +142,6 @@ const html = `<!DOCTYPE html>
 
   <h2>Projects</h2>
   ${projectHtml}
-
-  <h2>Deployment &amp; Infrastructure</h2>
-  ${platformHtml}
 
   <h2>Leadership</h2>
   <table>${leadership.roles

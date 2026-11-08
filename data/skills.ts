@@ -1,12 +1,11 @@
-// Source: docs/portfolio-content.md (v2.3) → Skills (honest presentation).
+// Source: docs/portfolio-content.md (v2.4) → Skills (honest presentation).
 // Not rendered: the site shows skills next to each project (stack tags), with
 // no proficiency bars, percentages, or years, and the resume only uses content
 // that also appears on the site.
 export const skills: { label: string; items: string }[] = [
   {
-    label: "Deployment & infra",
-    items:
-      "Vercel, Railway, Azure Web Apps, Azure Blob Storage, Azure DevOps, Neon, Docker, GitHub Actions, Linux, SSH, Proxmox, LXC",
+    label: "Frontend",
+    items: "Next.js, React, TypeScript, JavaScript, Tailwind CSS, shadcn/ui",
   },
   {
     label: "Backend",
@@ -14,8 +13,9 @@ export const skills: { label: string; items: string }[] = [
       "Django, Django REST Framework, Python, PostgreSQL, Prisma, Redis",
   },
   {
-    label: "Frontend",
-    items: "Next.js, React, TypeScript, JavaScript, Tailwind CSS, shadcn/ui",
+    label: "Deployment & infra",
+    items:
+      "Vercel, Railway, Azure Web Apps, Azure Blob Storage, Azure DevOps, IIS, Windows Server, Neon, Supabase, Docker, GitHub Actions, Linux, SSH, Proxmox, LXC",
   },
   {
     label: "Security",

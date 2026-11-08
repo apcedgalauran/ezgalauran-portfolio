@@ -1,4 +1,5 @@
 import type { Experience } from "../lib/types";
+import { namfrel } from "./namfrel.ts";
 
 // Source: docs/portfolio-content.md (v2) → Experience.
 export const experience: Experience[] = [
@@ -14,20 +15,12 @@ export const experience: Experience[] = [
   {
     organization: "APC × NAMFREL",
     program: "2026 BARMM Parliamentary Elections",
-    role: "DevOps & Infrastructure (Sub-Team 4) — Production Deployment",
+    // Shared with the project card so the wording is identical in both.
+    role: namfrel.role,
     dates: "September 2026",
-    summary:
-      "APC served as the NAMFREL Election Data Analytics Center for the September 14–15 elections.",
-    points: [
-      "Handled continuous deployment of the live election portal on Vercel through election day",
-      "Shipped 13 production deployments on September 14, including teammates' changes that the team's Vercel plan blocked from deploying — pushed through trigger commits from my authorized account",
-      "Verified each production deployment during my shift before handing off to the next shift",
-    ],
-    links: [
-      {
-        label: "namfrel-barmm2026.apc.edu.ph",
-        href: "https://namfrel-barmm2026.apc.edu.ph/",
-      },
-    ],
+    summary: namfrel.summary,
+    points: namfrel.points,
+    note: namfrel.teamContext,
+    links: [namfrel.link],
   },
 ];

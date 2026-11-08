@@ -76,7 +76,15 @@ export function ProjectCard({ project }: { project: Project }) {
         <p className="mt-5 text-sm leading-relaxed text-dim">{project.note}</p>
       )}
 
-      <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Tech stack">
+      {project.stackLabel && (
+        <p className="mt-5 font-mono text-xs uppercase tracking-[0.12em] text-dim">
+          {project.stackLabel}
+        </p>
+      )}
+      <ul
+        className={`${project.stackLabel ? "mt-2" : "mt-5"} flex flex-wrap gap-1.5`}
+        aria-label={project.stackLabel ?? "Tech stack"}
+      >
         {project.stack.map((tech) => (
           <li key={tech}>
             <Tag>{tech}</Tag>

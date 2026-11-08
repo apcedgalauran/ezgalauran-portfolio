@@ -53,16 +53,16 @@ export interface Project {
   /** Shown on the card without expanding. */
   highlights?: string[];
   stack: string[];
+  /**
+   * Visible heading for the tag list, e.g. "Methods" for the thesis, where the
+   * tags describe what the study covered rather than what Ezekiel built.
+   * Omitted: no visible heading, and the list is announced as "Tech stack".
+   */
+  stackLabel?: string;
   /** Heading of the expanded view, e.g. "What I did". */
   detailsHeading?: string;
   details: DetailGroup[];
   links?: Link[];
-}
-
-export interface Platform {
-  name: string;
-  what: string;
-  where: string[];
 }
 
 export interface Experience {
